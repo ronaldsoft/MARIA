@@ -1,0 +1,26 @@
+{
+    "Illumina": {
+        "threshold": 25,
+        "minbases": 50,
+        "homopolymer": 6,
+        "maxBadBases": 2
+    },
+    "OxfordNanopore": {
+        "threshold": 10,
+        "minbases": 1000,
+        "homopolymer": 10,
+        "maxBadBases": 5
+    },
+    "PacBio": {
+        "threshold": 20,
+        "minBases": 5000,
+        "homopolymer": 8,
+        "maxBadBases": 3
+    },
+    "IonTorrent": {
+        "threshold": 30,
+        "minbases": 100,
+        "homopolymer": 7,
+        "maxBadBases": 1
+    }
+}  

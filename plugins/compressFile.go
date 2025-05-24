@@ -8,6 +8,7 @@ import (
 
 // Exported function required by the system
 func Process(path string) error {
+	// this lib only compatible with linux and mac
 	zipPath := path + ".gz"
 	cmd := exec.Command("gzip", "-c", path)
 	outFile, err := os.Create(zipPath)

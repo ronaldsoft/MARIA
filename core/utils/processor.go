@@ -23,43 +23,38 @@ func ParallelClean(inputPath, outputPath string, chunkSize int, tech string, use
 	if threads <= 0 {
 		threads = runtime.NumCPU()
 	}
+
 	fmt.Printf("Threads: %v\n", threads)
 
 	reader := bufio.NewReader(file)
 	jobs := make(chan [][4]string, threads*2)
-	// results := make(chan [4]string, chunkSize*threads)
 	var wg sync.WaitGroup
 
 	NextPhase("Run on parallel threads", 4)
 
-	// Lanzar workers
+	// Launches workers
 	for i := 0; i < threads; i++ {
 		wg.Add(1)
 		go func(id int) {
-			fmt.Printf("Worker %d iniciado\n", id)
+			fmt.Printf("Worker %d started\n", id)
 			defer wg.Done()
 			for chunk := range jobs {
-				fmt.Printf("Worker %d recibió chunk con %d secuencias\n", id, len(chunk))
+				fmt.Printf("Worker %d receive chunk with %d secuences\n", id, len(chunk))
 				for idx, read := range chunk {
 					cleaned := cleanRead(read, tech)
-					fmt.Printf("Worker %d limpia secuencia %d \n", id, idx)
+					fmt.Printf("Worker %d clean secuence %d \n", id, idx)
 
 					if cleaned[0] == "" {
 						continue // skip empty
 					}
-					// if useDisk {
-					fmt.Printf("Worker %d escribe en disco tmp\n", id)
+					fmt.Printf("Worker %d writing on disk folder tmp\n", id)
 					WriteTempFile(tempDir, fmt.Sprintf("chunk_%d_seq_%d.tmp", id, idx), strings.Join(cleaned[:], ""))
-					// } else {
-					// 	fmt.Printf("Worker %d usa memoria\n", id)
-					// 	results <- cleaned
-					// }
 				}
 			}
 		}(i)
 	}
 
-	// Lector de archivo
+	// read file
 	var chunk [][4]string
 	for {
 		var seq [4]string
@@ -71,43 +66,20 @@ func ParallelClean(inputPath, outputPath string, chunkSize int, tech string, use
 					chunk = append(chunk, seq)
 				}
 				if len(chunk) > 0 {
-					fmt.Printf("Enviando último chunk de tamaño %d al canal jobs\n", len(chunk))
+					fmt.Printf("Sent last chunk of size %d to channel jobs\n", len(chunk))
 					jobs <- chunk
 				}
-				fmt.Println("Cerrando canal jobs")
+				fmt.Println("Close channel jobs")
 				close(jobs)
 				wg.Wait()
 
-				// Escribir resultados
-				// if useDisk {
 				NextPhase("Generating file output", 5)
 				err := mergeChunks(tempDir, outputPath)
 				if err != nil {
-					log.Fatalf("Error merge chunks: %v", err)
+					log.Fatalf("Error merge chunks: %v\n", err)
 				} else {
-					fmt.Println("Files are merged cleaned_output.fastq")
+					fmt.Printf("Files are merged: %v\n", outputPath)
 				}
-				// } else {
-				// 	outputFile, err := os.Create(outputPath)
-				// 	if err != nil {
-				// 		log.Fatalf("Error create output file: %v", err)
-				// 	}
-				// 	defer outputFile.Close()
-
-				// 	go func() {
-				// 		wg.Wait()
-				// 		close(results)
-				// 	}()
-
-				// 	for read := range results {
-				// 		_, err := outputFile.WriteString(read[0] + read[1] + read[2] + read[3])
-				// 		if err != nil {
-				// 			log.Fatalf("Error write file: %v", err)
-				// 		}
-				// 	}
-				// 	NextPhase("Generating file output", 5)
-				// 	fmt.Printf("File %v generated in memory.\n", outputPath)
-				// }
 
 				fmt.Println("Clean sequences complete")
 				if pluginList != "" {
@@ -128,7 +100,7 @@ func ParallelClean(inputPath, outputPath string, chunkSize int, tech string, use
 			chunk = append(chunk, seq)
 		}
 		if len(chunk) >= chunkSize {
-			fmt.Printf("Enviando chunk de tamaño %d al canal jobs\n", len(chunk))
+			fmt.Printf("sent chunk of size %d of channel jobs\n", len(chunk))
 			jobs <- chunk
 			chunk = nil
 		}
@@ -184,6 +156,8 @@ func mergeChunks(tempDir, outputPath string) error {
 		}
 		if _, err := outputFile.Write(data); err != nil {
 			return fmt.Errorf("error write ouput file: %w", err)
+		} else {
+			DeleteTempFile(file)
 		}
 	}
 

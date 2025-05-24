@@ -1,16 +1,22 @@
 package utils
 
-import "log"
+import (
+	"log"
+)
 
 func cleanIllumina(seqs []Sequence) ([]Sequence, error) {
 	adapters, err := loadAdapters("config/adapters.json")
+	qualities, errQ := loadQualities("config/quality.json")
 	if err != nil {
 		log.Fatalf("Error to load adapters: %v", err)
+	}
+	if errQ != nil {
+		log.Fatalf("Error to load qualities: %v", err)
 	}
 	var cleaned []Sequence
 	for _, seq := range seqs {
 		seq = trimAdapters(seq, adapters["Illumina"])
-		if meanQuality(seq.Quality) >= 25 && len(seq.Bases) >= 50 {
+		if validateQuality(seq.Quality, qualities["Illumina"].Threshold, qualities["Illumina"].MaxBadBases) && isValidLength(seq.Bases, qualities["Illumina"].Minbases) && !hasHomopolymer(seq.Bases, qualities["Illumina"].Homo) {
 			cleaned = append(cleaned, seq)
 		}
 	}
@@ -19,13 +25,17 @@ func cleanIllumina(seqs []Sequence) ([]Sequence, error) {
 
 func cleanNanopore(seqs []Sequence) ([]Sequence, error) {
 	adapters, err := loadAdapters("config/adapters.json")
+	qualities, errQ := loadQualities("config/quality.json")
 	if err != nil {
 		log.Fatalf("Error to load adapters: %v", err)
+	}
+	if errQ != nil {
+		log.Fatalf("Error to load qualities: %v", err)
 	}
 	var cleaned []Sequence
 	for _, seq := range seqs {
 		seq = trimAdapters(seq, adapters["OxfordNanopore"])
-		if meanQuality(seq.Quality) >= 12 && len(seq.Bases) >= 500 && !hasHomopolymer(seq.Bases, 10) {
+		if validateQuality(seq.Quality, qualities["OxfordNanopore"].Threshold, qualities["OxfordNanopore"].MaxBadBases) && isValidLength(seq.Bases, qualities["OxfordNanopore"].Minbases) && !hasHomopolymer(seq.Bases, qualities["OxfordNanopore"].Homo) {
 			cleaned = append(cleaned, seq)
 		}
 	}
@@ -34,13 +44,17 @@ func cleanNanopore(seqs []Sequence) ([]Sequence, error) {
 
 func cleanPacBio(seqs []Sequence) ([]Sequence, error) {
 	adapters, err := loadAdapters("config/adapters.json")
+	qualities, errQ := loadQualities("config/quality.json")
 	if err != nil {
 		log.Fatalf("Error to load adapters: %v", err)
+	}
+	if errQ != nil {
+		log.Fatalf("Error to load qualities: %v", err)
 	}
 	var cleaned []Sequence
 	for _, seq := range seqs {
 		seq = trimAdapters(seq, adapters["PacBio"])
-		if meanQuality(seq.Quality) >= 20 && len(seq.Bases) >= 500 {
+		if validateQuality(seq.Quality, qualities["PacBio"].Threshold, qualities["PacBio"].MaxBadBases) && isValidLength(seq.Bases, qualities["PacBio"].Minbases) && !hasHomopolymer(seq.Bases, qualities["PacBio"].Homo) {
 			cleaned = append(cleaned, seq)
 		}
 	}
@@ -49,13 +63,17 @@ func cleanPacBio(seqs []Sequence) ([]Sequence, error) {
 
 func cleanIonTorrent(seqs []Sequence) ([]Sequence, error) {
 	adapters, err := loadAdapters("config/adapters.json")
+	qualities, errQ := loadQualities("config/quality.json")
 	if err != nil {
 		log.Fatalf("Error to load adapters: %v", err)
+	}
+	if errQ != nil {
+		log.Fatalf("Error to load qualities: %v", err)
 	}
 	var cleaned []Sequence
 	for _, seq := range seqs {
 		seq = trimAdapters(seq, adapters["IonTorrent"])
-		if meanQuality(seq.Quality) >= 20 && len(seq.Bases) >= 100 && !hasHomopolymer(seq.Bases, 8) {
+		if validateQuality(seq.Quality, qualities["IonTorrent"].Threshold, qualities["IonTorrent"].MaxBadBases) && isValidLength(seq.Bases, qualities["IonTorrent"].Minbases) && !hasHomopolymer(seq.Bases, qualities["IonTorrent"].Homo) {
 			cleaned = append(cleaned, seq)
 		}
 	}

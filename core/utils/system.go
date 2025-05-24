@@ -135,28 +135,28 @@ func ExecutePlugins(pluginList string, cleanedFilePath string) {
 	plugins := strings.Split(pluginList, ",")
 	for _, pluginName := range plugins {
 		pluginPath := fmt.Sprintf("plugins/%s.so", pluginName)
-		fmt.Printf("🔧 Ejecutando plugin: %s\n", pluginPath)
+		fmt.Printf("🔧 Executing plugin: %s\n", pluginPath)
 
 		p, err := plugin.Open(pluginPath)
 		if err != nil {
-			log.Printf("No se pudo abrir plugin %s: %v\n", pluginName, err)
+			log.Printf("Can't open plugin %s: %v\n", pluginName, err)
 			continue
 		}
 
 		sym, err := p.Lookup("Process")
 		if err != nil {
-			log.Printf("Plugin %s no tiene la función 'Process'\n", pluginName)
+			log.Printf("Plugin %s nt have function 'Process'\n", pluginName)
 			continue
 		}
 
 		processFunc, ok := sym.(func(string) error)
 		if !ok {
-			log.Printf("'Process' en plugin %s tiene tipo incorrecto\n", pluginName)
+			log.Printf("'Process' on plugin %s have a incorrect type\n", pluginName)
 			continue
 		}
 
 		if err := processFunc(cleanedFilePath); err != nil {
-			log.Printf("Plugin %s falló: %v\n", pluginName, err)
+			log.Printf("Plugin %s fail: %v\n", pluginName, err)
 		}
 	}
 }
