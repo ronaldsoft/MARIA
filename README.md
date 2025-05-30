@@ -66,6 +66,24 @@ go build -buildmode=plugin -o plugins/compressFile.so plugins/compressFile.go
 go run main.go -plugins=compressFile,customPlugin
 ```
 
+## 🛠 Use plugins
+
+### Processing at the end
+
+Note: These plugin functions are executed after the cleanup is complete.
+
+```bash
+go run core/main.go -in input.fastq -out clean.fastq -plugins=compressFile
+```
+
+### Processing by sequence during the chunk
+
+Note: These functions are executed after cleaning within the processing of each sequence.
+
+```bash
+go run core/main.go -in input.fastq -out clean.fastq -plugins=compressFile -preworker true
+```
+
 ## Contributors
 
 - [Ronald Rivera](https://github.com/ronaldsoft)

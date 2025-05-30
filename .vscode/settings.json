@@ -24,6 +24,7 @@
     "gitlens.codeLens.enabled": true,
   
     "editor.tabSize": 4,
-    "editor.insertSpaces": true
+    "editor.insertSpaces": true,
+    "terminal.integrated.env.osx": {}
   }
   

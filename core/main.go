@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"MARIA/core/utils"
 )
@@ -16,9 +15,11 @@ func main() {
 	input := flag.String("in", "", "(.fastq, .fq, .fasta, .fa) -> File compatible with: Illumina, Oxford Nanopore, PacBio, and Ion Torrent")
 	output := flag.String("out", "", "Path of clean file")
 	pluginList := flag.String("plugins", "", "List of plugins separate for comma (order acendent execution)")
+	preWorker := flag.Bool("preworker", false, "Active order per worker execution")
+	details := flag.Bool("details", false, "Generates reports and folders with files of: adapters, invalid sequences, primers and low-quality sequences.")
 	threads := flag.Int("threads", 0, "Number of threads for use (0 use all)")
 	useDisk := flag.Bool("disk", false, "Use disk cache (default RAM)")
-	chunkSize := flag.Int("chunk", 1000, "Number of lines per chunk")
+	chunkSize := flag.Int("chunk", 0, "Number of lines per chunk")
 	flag.Parse()
 
 	if *input == "" || *output == "" {
@@ -26,12 +27,23 @@ func main() {
 		fmt.Println("Use with build: ./maria -in raw(.fastq, .fq, .fasta, .fa) -out clean.fastq -plugins=compressFile -disk=true -chunk=100000")
 		os.Exit(1)
 	}
+	fileFormat, fileLines := utils.CheckFileFormat(*input)
 	sample, err := utils.PeekFirstReads(*input, 100)
 	if err != nil {
 		log.Fatalf("Error read file")
 		return
 	}
 	// check tecnology
+	fmt.Printf("Cores Aveables: %d\n", utils.AvailableCPU())
+	fmt.Printf("RAM total: %d GB\n", utils.AvailableRAM()/1e9)
+	fmt.Printf("RAM usable (~75%%): %d GB\n", utils.UsableRAM()/1e9)
+
+	if *chunkSize == 0 {
+		size, totalChunks, memory := utils.AutoEstimateChunks(*input, fileLines)
+		fmt.Printf("Lines per chunk: %d (%.2f MB per core)\n", size, memory)
+		fmt.Printf("Total chunks: %d\n", totalChunks)
+		*chunkSize = size
+	}
 	tech := utils.DetectSequencingTech(sample)
 	if tech == "" {
 		log.Fatalf("Error secuence technology")
@@ -43,18 +55,16 @@ func main() {
 	useDiskCache := !ramOK && nvme
 	fmt.Printf("RAM: %v | NVMe: %v | Cache on disk: %v\n", ramOK, nvme, useDiskCache)
 
-	format := strings.ToLower(filepath.Ext(*input))
-
 	utils.NextPhase("Generating temporal directory", 2)
 	tempDir := filepath.Join(os.TempDir(), "maria_clean_chunks")
 	fmt.Printf("Temporal files on: %v \n", tempDir)
 	os.MkdirAll(tempDir, 0o755)
 
 	utils.NextPhase("Valid format of secuence", 3)
-	if format == ".fastq" || format == ".fq" {
-		utils.ParallelClean(*input, *output, *chunkSize, tech, *useDisk, *threads, tempDir, *pluginList)
-	} else if format == ".fasta" || format == ".fa" {
-		utils.ParallelClean(*input, *output, *chunkSize, tech, *useDisk, *threads, tempDir, *pluginList)
+	if fileFormat == "fastq" {
+		utils.ParallelClean(*input, *output, *chunkSize, tech, *useDisk, *threads, tempDir, *pluginList, *preWorker, *details)
+	} else if fileFormat == "fasta" {
+		utils.ParallelClean(*input, *output, *chunkSize, tech, *useDisk, *threads, tempDir, *pluginList, *preWorker, *details)
 	} else {
 		fmt.Println("Format not supported")
 	}

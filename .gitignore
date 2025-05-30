@@ -33,3 +33,6 @@ go.work.sum
 #build
 maria
 *.gz
+*.txt
+*.csv
+.DS_Store

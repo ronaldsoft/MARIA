@@ -4,7 +4,7 @@ import (
 	"log"
 )
 
-func cleanIllumina(seqs []Sequence) ([]Sequence, error) {
+func cleanIllumina(seqs []Sequence, details bool) ([]Sequence, error) {
 	adapters, err := loadAdapters("config/adapters.json")
 	qualities, errQ := loadQualities("config/quality.json")
 	if err != nil {
@@ -23,7 +23,7 @@ func cleanIllumina(seqs []Sequence) ([]Sequence, error) {
 	return cleaned, err
 }
 
-func cleanNanopore(seqs []Sequence) ([]Sequence, error) {
+func cleanNanopore(seqs []Sequence, details bool) ([]Sequence, error) {
 	adapters, err := loadAdapters("config/adapters.json")
 	qualities, errQ := loadQualities("config/quality.json")
 	if err != nil {
@@ -42,7 +42,7 @@ func cleanNanopore(seqs []Sequence) ([]Sequence, error) {
 	return cleaned, err
 }
 
-func cleanPacBio(seqs []Sequence) ([]Sequence, error) {
+func cleanPacBio(seqs []Sequence, details bool) ([]Sequence, error) {
 	adapters, err := loadAdapters("config/adapters.json")
 	qualities, errQ := loadQualities("config/quality.json")
 	if err != nil {
@@ -61,7 +61,7 @@ func cleanPacBio(seqs []Sequence) ([]Sequence, error) {
 	return cleaned, err
 }
 
-func cleanIonTorrent(seqs []Sequence) ([]Sequence, error) {
+func cleanIonTorrent(seqs []Sequence, details bool) ([]Sequence, error) {
 	adapters, err := loadAdapters("config/adapters.json")
 	qualities, errQ := loadQualities("config/quality.json")
 	if err != nil {
